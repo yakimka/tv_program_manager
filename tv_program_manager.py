@@ -120,12 +120,25 @@ class TVProgrammeParser:
 
 
 def create_args_parser():
+    def check_days_value(arg):
+        try:
+            value = int(arg)
+        except ValueError:
+            raise argparse.ArgumentTypeError('invalid int value: "{0}"'.format(arg))
+
+        if value < 1:
+            message = 'Expected > 0, got value = {}'.format(value)
+            raise argparse.ArgumentTypeError(message)
+
+        return value
+
     parser = argparse.ArgumentParser(
         description='TV program manager for baat',
         epilog='(c) yakimka 2018. Version {0}'.format(VERSION))
-    parser.add_argument('--truncate-tables', nargs='+', choices=TABLES_ALLOWED_TO_TRUNCATE,
+    parser.add_argument('--truncate-tables', nargs='+',
+                        choices=TABLES_ALLOWED_TO_TRUNCATE,
                         metavar='TABLES', help='Truncate tables')
-    parser.add_argument('--delete-older', type=int, metavar='N',
+    parser.add_argument('--delete-older', type=check_days_value, metavar='N',
                         help='Delete records older then N days')
     parser.add_argument('-f', '--file', type=argparse.FileType(), metavar='FILE',
                         help='Import TV program from file')
