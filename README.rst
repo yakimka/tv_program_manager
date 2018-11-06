@@ -4,9 +4,9 @@ TV program manager for @baaaaat
 
 Description:
 """"""""""""
-This program allows you to export xml with tv program to the database and manage it.
+This program allows you to import xml with TV program to the database and manage it.
 
-For default program use mysql database.
+For default program support only mysql database.
 
 Supports only python3.
 
@@ -37,7 +37,7 @@ Usage:
 
     $ ./tv_program_manager.py -h
     usage: tv_program_manager.py [-h] [--truncate-tables TABLES [TABLES ...]]
-                                 [--delete-older N] [-e FILE] [-V]
+                                 [--delete-older N] [-f FILE] [-V]
 
     TV program manager for baat
 
@@ -46,11 +46,11 @@ Usage:
       --truncate-tables TABLES [TABLES ...]
                             Truncate tables
       --delete-older N      Delete records older then N days
-      -e FILE, --export FILE
-                            Export TV program from file
+      -f FILE, --file FILE  Import TV program from file
       -V, --version         Show version
 
     (c) yakimka 2018. Version 0.1
+
 
 Truncate tables:
 ================
@@ -60,7 +60,7 @@ Truncate tables:
 
 Where "channels" and "programs" are table names
 
-Delete old program records
+Delete old TV program records
 ==========================
 ::
 
@@ -68,11 +68,11 @@ Delete old program records
 
 Where "7" is the number of days to save
 
-Export program from xml file
+Import TV program from xml file
 ============================
 ::
 
-    $ ./tv_program_manager.py -e ~/program.xml
+    $ ./tv_program_manager.py -f ~/program.xml
 
 Where "~/program.xml" is the file path
 
@@ -80,8 +80,8 @@ You also can combine this commands as you want:
 ===============================================
 ::
 
-    $ ./tv_program_manager.py --delete-older 7 --truncate-tables channels -e ~/program.xml
+    $ ./tv_program_manager.py --delete-older 7 --truncate-tables channels -f ~/program.xml
     Successfully truncated "channels" table
-    Export finished normally
+    Import finished normally
     Successfully deleted 80078 records
 

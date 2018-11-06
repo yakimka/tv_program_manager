@@ -82,8 +82,7 @@ class TVProgrammeParser:
         data = self._parse_element(element)
         return dict(
             name=data['display-name']['text'][:Channel.name.max_length],
-            channel=data['id'][:Channel.channel.max_length]
-        )
+            channel=data['id'][:Channel.channel.max_length])
 
     def _parse_programme(self, element):
         data = self._parse_element(element)
@@ -94,8 +93,7 @@ class TVProgrammeParser:
             time=date.time(),
             timestart=int(date.timestamp()),
             timestop=int(data['stop'].timestamp()),
-            channel=data['channel'][:Programme.channel.max_length]
-        )
+            channel=data['channel'][:Programme.channel.max_length])
 
     def _parse_element(self, element):
         data = {}
@@ -124,14 +122,13 @@ class TVProgrammeParser:
 def create_args_parser():
     parser = argparse.ArgumentParser(
         description='TV program manager for baat',
-        epilog='(c) yakimka 2018. Version {0}'.format(VERSION)
-    )
+        epilog='(c) yakimka 2018. Version {0}'.format(VERSION))
     parser.add_argument('--truncate-tables', nargs='+', choices=TABLES_ALLOWED_TO_TRUNCATE,
                         metavar='TABLES', help='Truncate tables')
     parser.add_argument('--delete-older', type=int, metavar='N',
                         help='Delete records older then N days')
-    parser.add_argument('-e', '--export', type=argparse.FileType(), metavar='FILE',
-                        help='Export TV program from file')
+    parser.add_argument('-f', '--file', type=argparse.FileType(), metavar='FILE',
+                        help='Import TV program from file')
     parser.add_argument('-V', '--version',
                         action='version',
                         help='Show version',
@@ -140,11 +137,11 @@ def create_args_parser():
     return parser
 
 
-def export(file):
+def import_(file):
     channels, programmes = TVProgrammeParser().parse(file)
     Channel.replace_many(channels).execute()
     Programme.replace_many(programmes).execute()
-    print('Export finished normally')
+    print('Import finished normally')
 
 
 def truncate_tables(tables):
@@ -171,7 +168,7 @@ if __name__ == '__main__':
     namespace = parser.parse_args(sys.argv[1:])
     if namespace.truncate_tables:
         truncate_tables(namespace.truncate_tables)
-    if namespace.export:
-        export(namespace.export)
+    if namespace.file:
+        import_(namespace.file)
     if namespace.delete_older:
         delete_old(namespace.delete_older)
