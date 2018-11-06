@@ -19,17 +19,70 @@ Install:
 
 Configure:
 """"""""""
+Set environment variables:
+
+* TV_PROGRAM_MANAGER_DB_NAME        - Database name
+* TV_PROGRAM_MANAGER_DB_USER        - Database user
+* TV_PROGRAM_MANAGER_DB_PASSWORD    - Database password
+
+For example:
+::
+
+    export TV_PROGRAM_MANAGER_DB_NAME=tv_manager
+    export TV_PROGRAM_MANAGER_DB_USER=tv_manager
+    export TV_PROGRAM_MANAGER_DB_PASSWORD=password
+
 Open tv_program_manager.py and change the settings as needed.
 ::
 
-    DB_NAME = 'tv_manager'              # Database name
-    DB_USER = 'tv_manager'              # Database user
-    DB_PASSWORD = 'password'            # Database password
     DB_HOST = '127.0.0.1'               # Database host
     DB_PORT = 3306                      # Database port
 
     CHANNELS_TABLE_NAME = 'channels'    # Channels table name
     PROGRAMME_TABLE_NAME = 'pp'         # TV program table name
+
+Database configuration:
+"""""""""""""""""""""""
+Table for channels:
+===================
+
+* name: VARCHAR(150)
+* channel: VARCHAR(100) UNIQUE
+
+Table for TV program:
+=====================
+
+* name: VARCHAR(150)
+* date: DATE
+* time: TIME
+* timestart: INT(10)
+* timestop: INT(10)
+* channel: VARCHAR(100)
+* UNIQUE index on name, date, time, channel
+
+If you change the maximum length of the fields then also change it in tv_program_manager.py for models
+
+SQL example:
+============
+::
+
+    CREATE TABLE channels
+    (
+        name varchar(150),
+        channel varchar(100)
+    );
+    CREATE UNIQUE INDEX channels_channel_uindex ON channels (channel);
+
+    CREATE TABLE pp
+    (
+        name varchar(150),
+        date date,
+        time time,
+        timestart int(10),
+        timestop int(10),
+        channel varchar(100)
+    );
+    CREATE UNIQUE INDEX pp_name_date_time_channel_uindex ON pp (name, date, time, channel);
 
 Usage:
 """"""
@@ -56,12 +109,12 @@ Truncate tables:
 ================
 ::
 
-    $ ./tv_program_manager.py --truncate-tables channels programs
+    $ ./tv_program_manager.py --truncate-tables channels pp
 
-Where "channels" and "programs" are table names
+Where "channels" and "pp" are table names
 
 Delete old TV program records
-==========================
+=============================
 ::
 
     $ ./tv_program_manager.py --delete-older 7
@@ -69,7 +122,7 @@ Delete old TV program records
 Where "7" is the number of days to save
 
 Import TV program from xml file
-============================
+===============================
 ::
 
     $ ./tv_program_manager.py -f ~/program.xml

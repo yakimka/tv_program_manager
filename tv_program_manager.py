@@ -1,27 +1,29 @@
 #!/usr/bin/env python3
 
 import argparse
+import os
 import sys
 from datetime import date, datetime, timedelta
 from xml.etree import ElementTree
 
+import peewee
 from peewee import (MySQLDatabase, Model, DateField, TimeField,
                     IntegerField, CharField)
 
-VERSION = '0.1'
+VERSION = '0.2'
 
-##############
-### CONFIG ###
-DB_NAME = 'tv_manager'
-DB_USER = 'tv_manager'
-DB_PASSWORD = 'password'
+######################## CONFIG #########################
+#########################################################
+DB_NAME = os.getenv('TV_PROGRAM_MANAGER_DB_NAME')
+DB_USER = os.getenv('TV_PROGRAM_MANAGER_DB_USER')
+DB_PASSWORD = os.getenv('TV_PROGRAM_MANAGER_DB_PASSWORD')
 DB_HOST = '127.0.0.1'
 DB_PORT = 3306
 
 CHANNELS_TABLE_NAME = 'channels'
 PROGRAMME_TABLE_NAME = 'pp'
-### END OF CONFIG ###
-#####################
+#########################################################
+##################### END OF CONFIG #####################
 
 
 TABLES_ALLOWED_TO_TRUNCATE = [CHANNELS_TABLE_NAME, PROGRAMME_TABLE_NAME]
@@ -124,7 +126,8 @@ def create_args_parser():
         try:
             value = int(arg)
         except ValueError:
-            raise argparse.ArgumentTypeError('invalid int value: "{0}"'.format(arg))
+            raise argparse.ArgumentTypeError(
+                'invalid int value: "{0}"'.format(arg))
 
         if value < 1:
             message = 'Expected > 0, got value = {}'.format(value)
@@ -135,12 +138,18 @@ def create_args_parser():
     parser = argparse.ArgumentParser(
         description='TV program manager for baat',
         epilog='(c) yakimka 2018. Version {0}'.format(VERSION))
-    parser.add_argument('--truncate-tables', nargs='+',
+    parser.add_argument('--truncate-tables',
+                        nargs='+',
                         choices=TABLES_ALLOWED_TO_TRUNCATE,
-                        metavar='TABLES', help='Truncate tables')
-    parser.add_argument('--delete-older', type=check_days_value, metavar='N',
+                        metavar='TABLES',
+                        help='Truncate tables')
+    parser.add_argument('--delete-older',
+                        type=check_days_value,
+                        metavar='N',
                         help='Delete records older then N days')
-    parser.add_argument('-f', '--file', type=argparse.FileType(), metavar='FILE',
+    parser.add_argument('-f', '--file',
+                        type=argparse.FileType(),
+                        metavar='FILE',
                         help='Import TV program from file')
     parser.add_argument('-V', '--version',
                         action='version',
@@ -179,9 +188,14 @@ if __name__ == '__main__':
         sys.exit(1)
 
     namespace = parser.parse_args(sys.argv[1:])
-    if namespace.truncate_tables:
-        truncate_tables(namespace.truncate_tables)
-    if namespace.file:
-        import_(namespace.file)
-    if namespace.delete_older:
-        delete_old(namespace.delete_older)
+    try:
+        if namespace.truncate_tables:
+            truncate_tables(namespace.truncate_tables)
+        if namespace.file:
+            import_(namespace.file)
+        if namespace.delete_older:
+            delete_old(namespace.delete_older)
+    except (peewee.OperationalError, peewee.InterfaceError) as e:
+        print(str(e), 'Check your database credentials',
+              file=sys.stderr, sep='\n')
+        sys.exit(1)
