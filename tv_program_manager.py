@@ -216,6 +216,7 @@ if __name__ == '__main__':
         if namespace.file:
             import_(namespace.file)
             print('Import finished normally')
+        if namespace.delete_older:
             del_cnt = delete_old(namespace.delete_older)
             print('Successfully deleted', del_cnt, 'records')
     except (peewee.OperationalError, peewee.InterfaceError) as e:
