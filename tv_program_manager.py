@@ -11,7 +11,7 @@ import peewee
 from peewee import (MySQLDatabase, Model, DateField, TimeField,
                     IntegerField, CharField)
 
-VERSION = '0.2'
+VERSION = '0.2.1'
 
 ######################## CONFIG #########################
 #########################################################
