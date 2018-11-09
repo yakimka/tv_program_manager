@@ -62,8 +62,11 @@ Table for TV program:
 
 If you change the maximum length of the fields then also change it in tv_program_manager.py for models
 
-SQL example:
-============
+Create database tables:
+=======================
+You can use --create-tables parameter
+
+Or create tables manually using SQL:
 ::
 
     CREATE TABLE channels
@@ -89,21 +92,32 @@ Usage:
 ::
 
     $ ./tv_program_manager.py -h
-    usage: tv_program_manager.py [-h] [--truncate-tables TABLES [TABLES ...]]
+    usage: tv_program_manager.py [-h] [--create-tables]
+                                 [--truncate-tables TABLES [TABLES ...]]
                                  [--delete-older N] [-f FILE] [-V]
 
     TV program manager for baat
 
     optional arguments:
       -h, --help            show this help message and exit
+      --create-tables       Create tables in database
       --truncate-tables TABLES [TABLES ...]
                             Truncate tables
       --delete-older N      Delete records older then N days
       -f FILE, --file FILE  Import TV program from file
       -V, --version         Show version
 
-    (c) yakimka 2018. Version 0.1
+    (c) yakimka 2018. Version 0.2
 
+
+
+Create tables:
+==============
+::
+
+    $ ./tv_program_manager.py --create-tables
+
+This will create tables for channels and TV program
 
 Truncate tables:
 ================
@@ -133,7 +147,7 @@ You also can combine this commands as you want:
 ===============================================
 ::
 
-    $ ./tv_program_manager.py --delete-older 7 --truncate-tables channels -f ~/program.xml
+    $ ./tv_program_manager.py --create-tables --delete-older 7 --truncate-tables channels -f ~/program.xml
     Successfully truncated "channels" table
     Import finished normally
     Successfully deleted 80078 records

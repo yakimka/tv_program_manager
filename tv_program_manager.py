@@ -3,6 +3,7 @@
 import argparse
 import os
 import sys
+from collections import namedtuple
 from datetime import date, datetime, timedelta
 from xml.etree import ElementTree
 
@@ -67,18 +68,24 @@ class Programme(BaseModel):
         )
 
 
+TVProgramme = namedtuple('TVProgramme', 'channels programmes')
+
+
 class TVProgrammeParser:
-    def parse(self, file):
+    def __init__(self, file):
+        self.file = file
+
+    def parse(self):
         channels = []
         programmes = []
-        root = ElementTree.parse(file).getroot()
+        root = ElementTree.parse(self.file).getroot()
         for child in root:
             if child.tag == 'programme':
                 programmes.append(self._parse_programme(child))
             elif child.tag == 'channel':
                 channels.append(self._parse_channel(child))
 
-        return channels, programmes
+        return TVProgramme(channels, programmes)
 
     def _parse_channel(self, element):
         data = self._parse_element(element)
@@ -138,6 +145,11 @@ def create_args_parser():
     parser = argparse.ArgumentParser(
         description='TV program manager for baat',
         epilog='(c) yakimka 2018. Version {0}'.format(VERSION))
+    parser.add_argument('--create-tables',
+                        action='store_const',
+                        const=True,
+                        default=False,
+                        help='Create tables in database')
     parser.add_argument('--truncate-tables',
                         nargs='+',
                         choices=TABLES_ALLOWED_TO_TRUNCATE,
@@ -159,25 +171,31 @@ def create_args_parser():
     return parser
 
 
+def create_tables():
+    Channel.create_table()
+    Programme.create_table()
+
+
+RecordsCount = namedtuple('RecordsCount', 'channels programmes')
+
+
 def import_(file):
-    channels, programmes = TVProgrammeParser().parse(file)
+    channels, programmes = TVProgrammeParser(file).parse()
     Channel.replace_many(channels).execute()
     Programme.replace_many(programmes).execute()
-    print('Import finished normally')
+    return RecordsCount(len(channels), len(programmes))
 
 
 def truncate_tables(tables):
-    for table in tables:
+    for table in list(tables):
         model = _REGISTERED_MODELS.get(table)
         if model is not None:
             model.delete().execute()
-            print('Successfully truncated "{0}" table'.format(table))
 
 
 def delete_old(days):
     date_ = date.today() - timedelta(days=days)
-    del_cnt = Programme.delete().where(Programme.date <= date_).execute()
-    print('Successfully deleted', del_cnt, 'records')
+    return Programme.delete().where(Programme.date <= date_).execute()
 
 
 if __name__ == '__main__':
@@ -189,13 +207,19 @@ if __name__ == '__main__':
 
     namespace = parser.parse_args(sys.argv[1:])
     try:
+        if namespace.create_tables:
+            create_tables()
         if namespace.truncate_tables:
             truncate_tables(namespace.truncate_tables)
+            print('Successfully truncated {0} table(s)'.format(
+                len(namespace.truncate_tables)))
         if namespace.file:
             import_(namespace.file)
-        if namespace.delete_older:
-            delete_old(namespace.delete_older)
+            print('Import finished normally')
+            del_cnt = delete_old(namespace.delete_older)
+            print('Successfully deleted', del_cnt, 'records')
     except (peewee.OperationalError, peewee.InterfaceError) as e:
         print(str(e), 'Check your database credentials',
-              file=sys.stderr, sep='\n')
+              file=sys.stderr,
+              sep='\n')
         sys.exit(1)
